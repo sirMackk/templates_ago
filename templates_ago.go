@@ -4,12 +4,18 @@ import (
     "strings"
     "html/template"
     "runtime"
+    "net/http"
     "fmt"
     "io/ioutil"
     "os"
 )
 
 type Templates map[string]*template.Template
+
+func (self Templates) Execute(w http.ResponseWriter, data interface{}) error {
+    //Use interface{} case type check?
+    return self[FuncName(2) + ".html"].ExecuteTemplate(w, "base", data)
+}
 
 func FuncName(level int) string {
     pc, _, _, ok := runtime.Caller(level)
@@ -36,5 +42,8 @@ func LoadTemplates(tplPath string, tpls Templates) {
     }
 }
 
+func NewTemplates() Templates {
+    return make(map[string]*template.Template)
+}
 
 
