@@ -8,12 +8,15 @@ import (
     "fmt"
     "io/ioutil"
     "os"
+    "encoding/json"
+    "bytes"
 )
 
 type Templates map[string]*template.Template
 
 func (self Templates) Execute(w http.ResponseWriter, data interface{}) error {
     //Use interface{} case type check?
+    //make check if template exists
     return self[FuncName(2) + ".html"].ExecuteTemplate(w, "base", data)
 }
 
@@ -38,12 +41,20 @@ func LoadTemplates(tplPath string, tpls Templates) {
     if err != nil { panic(err) }
     for _, file := range files {
         if file.Name() == "base.html" { continue }
-        tpls[file.Name()] = template.Must(template.ParseFiles(tplPath + file.Name(), "base.html"))
+        // some error handling would be nice here
+        tpls[strings.ToLower(file.Name())] = template.Must(template.New(strings.ToLower(file.Name())).Funcs(template.FuncMap{"toJson": ToJson}).ParseFiles(tplPath + file.Name(), tplPath + "base.html"))
     }
 }
 
 func NewTemplates() Templates {
     return make(map[string]*template.Template)
+}
+
+func ToJson(input interface{}) string {
+  b := new(bytes.Buffer)
+  enc := json.NewEncoder(b)
+  enc.Encode(input)
+  return b.String()
 }
 
 
